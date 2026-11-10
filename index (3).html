@@ -1,0 +1,514 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>PowerScope Survey – Simulation in Power-System Education</title>
+<meta name="description" content="A short survey on how simulation tools are used to teach and learn power-system analysis. Part of the PowerScope project (University of Auckland / TU Delft).">
+<meta property="og:title" content="PowerScope Survey – Simulation in Power-System Education">
+<meta property="og:description" content="5–10 minutes. Help us understand what helps and what gets in the way when learning power systems with simulation.">
+<style>
+  :root{
+    --bg:#f5f7fb; --card:#ffffff; --ink:#1b2333; --muted:#5b6578; --line:#dde2ec;
+    --accent:#0b5cad; --accent-2:#e8f1fb; --ok:#1e7d4f; --err:#b3261e;
+  }
+  *{box-sizing:border-box}
+  body{margin:0;font-family:system-ui,-apple-system,"Segoe UI",Roboto,Helvetica,Arial,sans-serif;
+       background:var(--bg);color:var(--ink);line-height:1.55}
+  header{background:linear-gradient(135deg,#0b2a4a,#0b5cad);color:#fff;padding:48px 20px 64px}
+  header .wrap{max-width:820px;margin:0 auto}
+  header .tag{display:inline-block;font-size:.8rem;letter-spacing:.06em;text-transform:uppercase;
+       background:rgba(255,255,255,.15);padding:4px 10px;border-radius:99px}
+  header h1{font-size:clamp(1.6rem,4vw,2.3rem);margin:14px 0 10px;line-height:1.2}
+  header p{margin:0;opacity:.92;max-width:640px}
+  .meta{display:flex;gap:18px;flex-wrap:wrap;margin-top:18px;font-size:.9rem;opacity:.9}
+  main{max-width:820px;margin:-36px auto 40px;padding:0 16px}
+  .card{background:var(--card);border:1px solid var(--line);border-radius:14px;
+        padding:24px clamp(18px,4vw,32px);margin-bottom:18px;box-shadow:0 1px 3px rgba(20,30,50,.05)}
+  h2{font-size:1.15rem;margin:0 0 4px}
+  h2 .num{color:var(--accent);margin-right:6px}
+  .sub{color:var(--muted);font-size:.92rem;margin:0 0 18px}
+  .q{margin:20px 0}
+  .q > label, .q > .label{display:block;font-weight:600;margin-bottom:8px}
+  .req::after{content:" *";color:var(--err)}
+  .opts{display:grid;gap:8px}
+  .opts.cols{grid-template-columns:repeat(auto-fit,minmax(220px,1fr))}
+  .opt{display:flex;align-items:flex-start;gap:10px;padding:10px 12px;border:1px solid var(--line);
+       border-radius:10px;cursor:pointer;transition:border-color .15s,background .15s}
+  .opt:hover{border-color:var(--accent)}
+  .opt input{margin-top:3px;accent-color:var(--accent)}
+  .opt:has(input:checked){border-color:var(--accent);background:var(--accent-2)}
+  input[type=text],input[type=email],select,textarea{width:100%;padding:10px 12px;border:1px solid var(--line);
+       border-radius:10px;font:inherit;background:#fff;color:var(--ink)}
+  textarea{min-height:90px;resize:vertical}
+  input:focus,select:focus,textarea:focus{outline:2px solid var(--accent);outline-offset:1px}
+  /* Likert */
+  .likert{width:100%;border-collapse:collapse;font-size:.92rem}
+  .likert th{font-weight:500;color:var(--muted);font-size:.78rem;padding:6px 4px;text-align:center}
+  .likert td{border-top:1px solid var(--line);padding:10px 4px;text-align:center}
+  .likert td:first-child{text-align:left;padding-right:12px;width:52%}
+  .likert input{width:18px;height:18px;accent-color:var(--accent);cursor:pointer}
+  @media (max-width:640px){
+    .likert thead{display:none}
+    .likert tr{display:block;border-top:1px solid var(--line);padding:10px 0}
+    .likert td{display:inline-block;border:0;padding:4px 6px}
+    .likert td:first-child{display:block;width:100%;padding:0 0 6px}
+    .likert td[data-l]::after{content:attr(data-l);display:block;font-size:.65rem;color:var(--muted)}
+  }
+  .scale-note{font-size:.8rem;color:var(--muted);margin-top:6px}
+  .cta{display:inline-block;background:var(--accent);color:#fff;text-decoration:none;padding:10px 16px;
+       border-radius:10px;font-weight:600}
+  .cta:hover{filter:brightness(1.08)}
+  .info{background:var(--accent-2);border-left:4px solid var(--accent);padding:12px 14px;border-radius:8px;font-size:.92rem}
+  button[type=submit]{background:var(--accent);color:#fff;border:0;padding:14px 26px;font:inherit;font-weight:700;
+       border-radius:12px;cursor:pointer;font-size:1rem}
+  button[disabled]{opacity:.6;cursor:wait}
+  .msg{margin-top:14px;font-weight:600}
+  .msg.ok{color:var(--ok)} .msg.err{color:var(--err)}
+  .progress{position:sticky;top:0;height:5px;background:var(--line);z-index:10}
+  .progress span{display:block;height:100%;width:0;background:var(--accent);transition:width .25s}
+  .hidden{display:none}
+  footer{text-align:center;color:var(--muted);font-size:.85rem;padding:10px 16px 40px}
+  .thanks{text-align:center;padding:40px 20px}
+  .thanks h2{font-size:1.5rem}
+</style>
+</head>
+<body>
+<div class="progress" aria-hidden="true"><span id="bar"></span></div>
+
+<header>
+  <div class="wrap">
+    <span class="tag">Research survey · Power-system education</span>
+    <h1>How should simulation help us teach and learn power systems?</h1>
+    <p>Fault currents, rotor swings and the frequency dip after a generator trip are hard to show on slides. We are evaluating <strong>PowerScope</strong>, a free browser-based simulator that explains <em>why</em> the system behaves as it does. Your answers will shape the next version and its evaluation.</p>
+    <p style="margin-top:18px"><a href="https://krishna-uoa.github.io/powerscope/" target="_blank" rel="noopener"
+       style="display:inline-block;background:#fff;color:#0b5cad;font-weight:700;text-decoration:none;padding:10px 16px;border-radius:10px">▶ Try PowerScope first ↗</a></p>
+    <p style="margin:10px 0 0;font-size:.88rem;opacity:.92;max-width:640px">💡 <strong>Animations not moving?</strong> The PowerScope animations (rotating wind turbines and generators) may not play because of your computer's power-saving or motion settings. Windows: <em>Settings → Accessibility → Visual effects → Animation effects: On</em>. Mac: <em>System Settings → Accessibility → Display → Reduce motion: Off</em>.</p>
+    <div class="meta"><span>⏱ 5–10 minutes</span><span>🔒 Anonymous by default</span><span>🎓 Educators, students &amp; engineers</span></div>
+  </div>
+</header>
+
+<main>
+<form id="survey" novalidate>
+
+  <!-- 0. Consent -->
+  <section class="card">
+    <h2><span class="num">0</span>Participant information &amp; consent</h2>
+    <p class="sub">Please read before you start.</p>
+    <div class="info">
+      This survey is part of a research project on simulation-based learning in power engineering
+      (University of Auckland, New Zealand, and TU Delft, the Netherlands).
+      Participation is voluntary, and you can stop at any time. We do not collect names unless you choose to leave an email address at the end.
+      Results will be reported only in aggregate in academic publications.
+      <span id="ethicsLine"></span>
+      Questions: <a id="contactLink" href="#">contact the research team</a>.
+    </div>
+    <div class="q">
+      <label class="opt"><input type="checkbox" name="consent" value="yes" required>
+        <span class="req">I am 18 or older, I have read the information above, and I agree to take part.</span></label>
+    </div>
+  </section>
+
+  <!-- 1. About you -->
+  <section class="card">
+    <h2><span class="num">1</span>About you</h2>
+    <p class="sub">This helps us understand who is answering.</p>
+
+    <div class="q">
+      <span class="label req">What best describes your role?</span>
+      <div class="opts cols">
+        <label class="opt"><input type="radio" name="role" value="Undergraduate student" required> Undergraduate student</label>
+        <label class="opt"><input type="radio" name="role" value="Postgraduate student"> Postgraduate student</label>
+        <label class="opt"><input type="radio" name="role" value="Lecturer / Professor"> Lecturer / Professor</label>
+        <label class="opt"><input type="radio" name="role" value="Teaching assistant / Lab tutor"> Teaching assistant / Lab tutor</label>
+        <label class="opt"><input type="radio" name="role" value="Industry engineer"> Industry engineer</label>
+        <label class="opt"><input type="radio" name="role" value="Industry trainer"> Industry trainer</label>
+        <label class="opt"><input type="radio" name="role" value="Other"> Other</label>
+      </div>
+    </div>
+
+    <div class="q">
+      <label for="region" class="req">Where are you based?</label>
+      <select id="region" name="region" required>
+        <option value="">Select a region…</option>
+        <option>Oceania (NZ, Australia, Pacific)</option>
+        <option>South Asia</option>
+        <option>East / South-East Asia</option>
+        <option>Middle East</option>
+        <option>Africa</option>
+        <option>Europe</option>
+        <option>North America</option>
+        <option>Latin America</option>
+      </select>
+    </div>
+
+    <div class="q">
+      <span class="label req">Years of experience with power-system analysis (study or work)</span>
+      <div class="opts cols">
+        <label class="opt"><input type="radio" name="experience" value="<1" required> Less than 1 year</label>
+        <label class="opt"><input type="radio" name="experience" value="1-3"> 1–3 years</label>
+        <label class="opt"><input type="radio" name="experience" value="4-10"> 4–10 years</label>
+        <label class="opt"><input type="radio" name="experience" value=">10"> More than 10 years</label>
+      </div>
+    </div>
+  </section>
+
+  <!-- 2. Current practice -->
+  <section class="card">
+    <h2><span class="num">2</span>Current tools and challenges</h2>
+    <p class="sub">How simulation is used today.</p>
+
+    <div class="q">
+      <span class="label">Which tools have you used for teaching or learning power systems? <small>(select all that apply)</small></span>
+      <div class="opts cols">
+        <label class="opt"><input type="checkbox" name="tools" value="MATPOWER"> MATPOWER</label>
+        <label class="opt"><input type="checkbox" name="tools" value="PSAT"> PSAT</label>
+        <label class="opt"><input type="checkbox" name="tools" value="pandapower / PyPSA"> pandapower / PyPSA</label>
+        <label class="opt"><input type="checkbox" name="tools" value="OpenDSS"> OpenDSS</label>
+        <label class="opt"><input type="checkbox" name="tools" value="PowerWorld"> PowerWorld</label>
+        <label class="opt"><input type="checkbox" name="tools" value="PSS/E"> PSS®E</label>
+        <label class="opt"><input type="checkbox" name="tools" value="DIgSILENT PowerFactory"> DIgSILENT PowerFactory</label>
+        <label class="opt"><input type="checkbox" name="tools" value="ETAP"> ETAP</label>
+        <label class="opt"><input type="checkbox" name="tools" value="PSCAD / EMTP"> PSCAD / EMTP</label>
+        <label class="opt"><input type="checkbox" name="tools" value="MATLAB Simulink / Simscape"> MATLAB Simulink / Simscape</label>
+        <label class="opt"><input type="checkbox" name="tools" value="RTDS / OPAL-RT"> RTDS / OPAL-RT</label>
+        <label class="opt"><input type="checkbox" name="tools" value="None"> None</label>
+      </div>
+      <input type="text" name="tools_other" placeholder="Other tools (optional)" style="margin-top:8px">
+    </div>
+
+    <div class="q">
+      <span class="label req">What is the <u>biggest</u> barrier to using simulation tools in teaching or learning?</span>
+      <div class="opts">
+        <label class="opt"><input type="radio" name="barrier" value="Licence cost and installation" required> Licence cost and installation</label>
+        <label class="opt"><input type="radio" name="barrier" value="Steep learning curve"> Steep learning curve / time to learn the tool</label>
+        <label class="opt"><input type="radio" name="barrier" value="Results lack explanation"> Results are numbers and plots with no explanation of <em>why</em></label>
+        <label class="opt"><input type="radio" name="barrier" value="No link to real hardware"> No link to real hardware or hands-on experience</label>
+        <label class="opt"><input type="radio" name="barrier" value="Limited topic coverage"> One tool doesn't cover all topics (PF, faults, stability, protection…)</label>
+        <label class="opt"><input type="radio" name="barrier" value="Other"> Other (please explain below)</label>
+      </div>
+    </div>
+
+    <div class="q">
+      <span class="label req">Which topics are hardest to understand or teach without good visualisation? <small>(up to 3)</small></span>
+      <div class="opts cols" data-max="3">
+        <label class="opt"><input type="checkbox" name="hard_topics" value="Power flow"> Power flow</label>
+        <label class="opt"><input type="checkbox" name="hard_topics" value="Symmetrical components / unbalanced faults"> Symmetrical components / unbalanced faults</label>
+        <label class="opt"><input type="checkbox" name="hard_topics" value="Transient stability / equal-area"> Transient stability / equal-area criterion</label>
+        <label class="opt"><input type="checkbox" name="hard_topics" value="Frequency response / inertia"> Frequency response / low inertia</label>
+        <label class="opt"><input type="checkbox" name="hard_topics" value="Protection & relay grading"> Protection &amp; relay grading</label>
+        <label class="opt"><input type="checkbox" name="hard_topics" value="Electromagnetic transients"> Electromagnetic transients</label>
+        <label class="opt"><input type="checkbox" name="hard_topics" value="IEC 61850 / digital substations"> IEC 61850 / digital substations</label>
+        <label class="opt"><input type="checkbox" name="hard_topics" value="Power quality / harmonics"> Power quality / harmonics</label>
+        <label class="opt"><input type="checkbox" name="hard_topics" value="HVDC / inverter-based resources"> HVDC / inverter-based resources</label>
+        <label class="opt"><input type="checkbox" name="hard_topics" value="Generator start-up & synchronisation"> Generator start-up &amp; synchronisation</label>
+      </div>
+    </div>
+
+    <div class="q">
+      <label for="barrier_detail">Anything else about these challenges? <small>(optional)</small></label>
+      <textarea id="barrier_detail" name="barrier_detail" placeholder="E.g. what you wish your current tool did…"></textarea>
+    </div>
+  </section>
+
+  <!-- 3. Design features -->
+  <section class="card">
+    <h2><span class="num">3</span>What would help learning?</h2>
+    <p class="sub">How useful would each feature be for you or your students?</p>
+    <table class="likert" id="features">
+      <thead><tr><th></th><th>Not useful</th><th>Slightly</th><th>Moderately</th><th>Very</th><th>Essential</th></tr></thead>
+      <tbody></tbody>
+    </table>
+  </section>
+
+  <!-- 4. Tried PowerScope? -->
+  <section class="card">
+    <h2><span class="num">4</span>Try PowerScope (optional, about 5 minutes)</h2>
+    <p class="sub">If you can, open PowerScope, run one study (for example a line-to-ground fault), and then answer the questions below.</p>
+    <p><a id="toolLink" class="cta" href="#" target="_blank" rel="noopener">Open PowerScope in a new tab ↗</a></p>
+    <div class="info">
+      <strong>Animations not working?</strong> The animations in PowerScope (rotating wind turbines and generators) may not work on your computer because of power-saving or motion settings. To turn them on:
+      <ul style="margin:6px 0 0;padding-left:20px">
+        <li><strong>Windows:</strong> Settings → Accessibility → Visual effects → turn <em>Animation effects</em> On</li>
+        <li><strong>Mac:</strong> System Settings → Accessibility → Display → turn <em>Reduce motion</em> Off</li>
+      </ul>
+      Then reload the PowerScope page.
+    </div>
+
+    <div class="q">
+      <span class="label req">Have you used PowerScope?</span>
+      <div class="opts cols">
+        <label class="opt"><input type="radio" name="tried" value="yes" required> Yes, I tried it</label>
+        <label class="opt"><input type="radio" name="tried" value="no"> No, skip this section</label>
+      </div>
+    </div>
+
+    <div id="triedBlock" class="hidden">
+      <div class="q">
+        <span class="label">Which studies did you run? <small>(select all that apply)</small></span>
+        <div class="opts cols">
+          <label class="opt"><input type="checkbox" name="studies" value="Power flow"> Power flow</label>
+          <label class="opt"><input type="checkbox" name="studies" value="Fault analysis"> Fault analysis</label>
+          <label class="opt"><input type="checkbox" name="studies" value="Transient stability"> Transient stability</label>
+          <label class="opt"><input type="checkbox" name="studies" value="Frequency response"> Frequency response</label>
+          <label class="opt"><input type="checkbox" name="studies" value="Protection"> Protection</label>
+          <label class="opt"><input type="checkbox" name="studies" value="EMT"> Electromagnetic transients</label>
+          <label class="opt"><input type="checkbox" name="studies" value="IEC 61850"> IEC 61850 / GOOSE</label>
+          <label class="opt"><input type="checkbox" name="studies" value="Power plant module"> Power-plant start-up &amp; sync</label>
+          <label class="opt"><input type="checkbox" name="studies" value="Hardware-in-the-loop"> Hardware-in-the-loop (Arduino / Pi)</label>
+        </div>
+      </div>
+
+      <h2 style="margin-top:26px">System Usability Scale</h2>
+      <p class="sub">How much do you agree with each statement about PowerScope?</p>
+      <table class="likert" id="sus">
+        <thead><tr><th></th><th>Strongly disagree</th><th>Disagree</th><th>Neutral</th><th>Agree</th><th>Strongly agree</th></tr></thead>
+        <tbody></tbody>
+      </table>
+      <p class="scale-note">SUS items © Brooke (1996), used under the standard terms for the scale.</p>
+
+      <h2 style="margin-top:26px">Perceived learning value</h2>
+      <p class="sub">How much do you agree?</p>
+      <table class="likert" id="learning">
+        <thead><tr><th></th><th>Strongly disagree</th><th>Disagree</th><th>Neutral</th><th>Agree</th><th>Strongly agree</th></tr></thead>
+        <tbody></tbody>
+      </table>
+
+      <div class="q">
+        <span class="label">Compared with the tool you use most, PowerScope is…</span>
+        <div class="opts cols">
+          <label class="opt"><input type="radio" name="comparison" value="Much worse for learning"> Much worse for learning</label>
+          <label class="opt"><input type="radio" name="comparison" value="Somewhat worse"> Somewhat worse</label>
+          <label class="opt"><input type="radio" name="comparison" value="About the same"> About the same</label>
+          <label class="opt"><input type="radio" name="comparison" value="Somewhat better"> Somewhat better</label>
+          <label class="opt"><input type="radio" name="comparison" value="Much better for learning"> Much better for learning</label>
+          <label class="opt"><input type="radio" name="comparison" value="No basis to compare"> I have no basis to compare</label>
+        </div>
+      </div>
+
+      <div class="q">
+        <label for="liked">What did you find most helpful?</label>
+        <textarea id="liked" name="liked"></textarea>
+      </div>
+      <div class="q">
+        <label for="improve">What should be improved or added?</label>
+        <textarea id="improve" name="improve"></textarea>
+      </div>
+    </div>
+  </section>
+
+  <!-- 5. Follow-up -->
+  <section class="card">
+    <h2><span class="num">5</span>Stay involved (optional)</h2>
+    <div class="q">
+      <span class="label">Would you be interested in…? <small>(select all that apply)</small></span>
+      <div class="opts">
+        <label class="opt"><input type="checkbox" name="followup" value="Classroom trial"> Using PowerScope in a course I teach (classroom trial)</label>
+        <label class="opt"><input type="checkbox" name="followup" value="Interview"> A 20-minute online interview</label>
+        <label class="opt"><input type="checkbox" name="followup" value="HIL bench"> Building a low-cost hardware-in-the-loop bench</label>
+        <label class="opt"><input type="checkbox" name="followup" value="Updates"> Receiving updates and the published results</label>
+      </div>
+    </div>
+    <div class="q">
+      <label for="email">Email <small>(only if you selected an option above; stored separately and never published)</small></label>
+      <input type="email" id="email" name="email" placeholder="you@university.edu" autocomplete="email">
+    </div>
+    <div class="q">
+      <label for="source">How did you find this survey?</label>
+      <select id="source" name="source">
+        <option value="">Select…</option>
+        <option>LinkedIn</option><option>Facebook</option><option>Email</option>
+        <option>Colleague / lecturer</option><option>IEEE / professional group</option><option>Other</option>
+      </select>
+    </div>
+  </section>
+
+  <section class="card" style="text-align:center">
+    <button type="submit" id="submitBtn">Submit responses</button>
+    <div id="msg" class="msg" role="status" aria-live="polite"></div>
+  </section>
+</form>
+
+<section id="thanks" class="card thanks hidden">
+  <h2>🙏 Thank you!</h2>
+  <p>Your response has been recorded. It will help make power-system education more visual, explanatory and accessible.</p>
+  <p>Please share this survey with colleagues and students:</p>
+  <p>
+    <a class="cta" id="shareLi" target="_blank" rel="noopener">Share on LinkedIn</a>
+    <a class="cta" id="shareFb" target="_blank" rel="noopener" style="margin-left:8px">Share on Facebook</a>
+  </p>
+</section>
+</main>
+
+<footer>
+  PowerScope research project · University of Auckland &amp; TU Delft · <span id="year"></span>
+</footer>
+
+<script>
+/* =====================================================================
+   CONFIGURATION: edit these values before uploading to GitHub
+   ===================================================================== */
+const CONFIG = {
+  // Google Apps Script Web App URL (see README / setup steps). Leave "" to test locally.
+  ENDPOINT: "",
+  // Link to the live PowerScope tool (e.g. https://yourname.github.io/powerscope/)
+  TOOL_URL: "https://krishna-uoa.github.io/powerscope/",
+  // Contact email shown in the consent box
+  CONTACT_EMAIL: "krishna.kumar@auckland.ac.nz",
+  // Ethics approval reference, e.g. "UAHPEC Ref. 12345". Leave "" until approved.
+  ETHICS_REF: ""
+};
+/* ===================================================================== */
+
+const FEATURES = [
+  ["f_zero_install","Runs in a web browser with no installation or licence"],
+  ["f_animation","Animated single-line diagram showing flows, faults and breaker states"],
+  ["f_explanation","Automatic plain-language explanation of the results, using the actual numbers"],
+  ["f_predict","Asks me to predict the outcome before running the simulation"],
+  ["f_changelog","Change one parameter at a time and compare (undoable change log)"],
+  ["f_hil","Connect to low-cost hardware (Arduino / Raspberry Pi) to operate breakers and loads"],
+  ["f_plant","Start, synchronise and load a power plant step by step"],
+  ["f_breadth","One tool covering PF, faults, stability, EMT, protection and IEC 61850"]
+];
+const SUS = [
+  "I think that I would like to use this system frequently.",
+  "I found the system unnecessarily complex.",
+  "I thought the system was easy to use.",
+  "I think that I would need the support of a technical person to be able to use this system.",
+  "I found the various functions in this system were well integrated.",
+  "I thought there was too much inconsistency in this system.",
+  "I would imagine that most people would learn to use this system very quickly.",
+  "I found the system very cumbersome to use.",
+  "I felt very confident using the system.",
+  "I needed to learn a lot of things before I could get going with this system."
+];
+const LEARNING = [
+  ["l_understand","PowerScope helped me understand <em>why</em> the system behaved as it did."],
+  ["l_visual","The animated diagram made invisible phenomena (e.g. sequence currents, rotor angle) easier to picture."],
+  ["l_explain","The generated explanation was accurate and useful."],
+  ["l_predict","Predicting before running made me think more carefully."],
+  ["l_course","I would use or recommend PowerScope in a power-systems course."],
+  ["l_confidence","After using it, I feel more confident about the topic I explored."]
+];
+const SCALE5 = ["1","2","3","4","5"];
+const LABELS_AGREE = ["Strongly disagree","Disagree","Neutral","Agree","Strongly agree"];
+const LABELS_USE = ["Not useful","Slightly","Moderately","Very","Essential"];
+
+function likertRows(tbodySel, items, labels, required){
+  const tb = document.querySelector(tbodySel + " tbody");
+  items.forEach(([name,text])=>{
+    const tr = document.createElement("tr");
+    tr.innerHTML = `<td>${text}</td>` + SCALE5.map((v,i)=>
+      `<td data-l="${labels[i]}"><input type="radio" name="${name}" value="${v}" aria-label="${labels[i]}" ${required?"required":""}></td>`).join("");
+    tb.appendChild(tr);
+  });
+}
+likertRows("#features", FEATURES, LABELS_USE, true);
+likertRows("#sus", SUS.map((t,i)=>["sus"+(i+1), (i+1)+". "+t]), LABELS_AGREE, false);
+likertRows("#learning", LEARNING, LABELS_AGREE, false);
+
+// Config-driven bits
+document.getElementById("year").textContent = new Date().getFullYear();
+const contact = document.getElementById("contactLink");
+contact.href = "mailto:" + CONFIG.CONTACT_EMAIL; contact.textContent = CONFIG.CONTACT_EMAIL;
+if (CONFIG.ETHICS_REF) document.getElementById("ethicsLine").textContent =
+  "This study has been approved by the ethics committee (" + CONFIG.ETHICS_REF + "). ";
+const tool = document.getElementById("toolLink");
+if (CONFIG.TOOL_URL) tool.href = CONFIG.TOOL_URL;
+else { tool.removeAttribute("href"); tool.style.opacity=.5; tool.textContent="PowerScope link coming soon"; }
+
+// Show/hide the "tried" block
+const triedBlock = document.getElementById("triedBlock");
+document.querySelectorAll('input[name="tried"]').forEach(r=>r.addEventListener("change",e=>{
+  triedBlock.classList.toggle("hidden", e.target.value!=="yes");
+}));
+
+// Limit "hard topics" to 3
+document.querySelectorAll('[data-max]').forEach(group=>{
+  const max = +group.dataset.max;
+  group.addEventListener("change",()=>{
+    const boxes=[...group.querySelectorAll("input[type=checkbox]")];
+    const n=boxes.filter(b=>b.checked).length;
+    boxes.forEach(b=>{ if(!b.checked) b.disabled = n>=max; });
+  });
+});
+
+// Progress bar
+const form = document.getElementById("survey");
+function updateProgress(){
+  const names = new Set([...form.querySelectorAll("[required]")].map(e=>e.name));
+  let done=0; names.forEach(n=>{
+    const els=form.querySelectorAll(`[name="${n}"]`);
+    if([...els].some(e=>(e.type==="radio"||e.type==="checkbox")?e.checked:e.value.trim())) done++;
+  });
+  document.getElementById("bar").style.width = (100*done/names.size)+"%";
+}
+form.addEventListener("input",updateProgress); form.addEventListener("change",updateProgress);
+
+// Collect answers
+function collect(){
+  const data = {};
+  const fd = new FormData(form);
+  for (const [k,v] of fd.entries()){
+    data[k] = (k in data) ? data[k] + "; " + v : v;
+  }
+  // SUS score (0–100) if all 10 items answered
+  const s = [...Array(10)].map((_,i)=>+data["sus"+(i+1)]||0);
+  if (s.every(x=>x>0)){
+    const total = s.reduce((acc,x,i)=>acc + (i%2===0 ? x-1 : 5-x),0);
+    data.sus_score = (total*2.5).toFixed(1);
+  }
+  data.submitted_at = new Date().toISOString();
+  data.user_agent = navigator.userAgent.slice(0,150);
+  return data;
+}
+
+function validate(){
+  const missing=[];
+  const names = new Set([...form.querySelectorAll("[required]")].map(e=>e.name));
+  names.forEach(n=>{
+    const els=[...form.querySelectorAll(`[name="${n}"]`)];
+    const ok = els.some(e=>(e.type==="radio"||e.type==="checkbox")?e.checked:e.value.trim());
+    if(!ok) missing.push(els[0]);
+  });
+  return missing;
+}
+
+form.addEventListener("submit", async (e)=>{
+  e.preventDefault();
+  const msg = document.getElementById("msg"); msg.className="msg"; msg.textContent="";
+  const missing = validate();
+  if (missing.length){
+    msg.className="msg err";
+    msg.textContent = "Please answer the required questions (marked *). " + missing.length + " remaining.";
+    missing[0].closest(".q, tr, .card").scrollIntoView({behavior:"smooth",block:"center"});
+    return;
+  }
+  const data = collect();
+  const btn = document.getElementById("submitBtn"); btn.disabled=true; btn.textContent="Submitting…";
+  try{
+    if (!CONFIG.ENDPOINT){
+      console.log("TEST MODE: no ENDPOINT set. Collected data:", data);
+      alert("Test mode: no ENDPOINT configured. Data printed to the browser console.");
+    } else {
+      // text/plain avoids a CORS preflight with Google Apps Script
+      await fetch(CONFIG.ENDPOINT,{method:"POST",mode:"no-cors",
+        headers:{"Content-Type":"text/plain;charset=utf-8"},body:JSON.stringify(data)});
+    }
+    try{ localStorage.setItem("powerscope_survey_done","1"); }catch(_){}
+    form.classList.add("hidden");
+    document.getElementById("thanks").classList.remove("hidden");
+    window.scrollTo({top:0,behavior:"smooth"});
+  }catch(err){
+    msg.className="msg err"; msg.textContent="Sorry, submission failed. Please check your connection and try again.";
+    btn.disabled=false; btn.textContent="Submit responses";
+  }
+});
+
+// Share links
+const here = encodeURIComponent(location.href.split("#")[0]);
+document.getElementById("shareLi").href = "https://www.linkedin.com/sharing/share-offsite/?url="+here;
+document.getElementById("shareFb").href = "https://www.facebook.com/sharer/sharer.php?u="+here;
+</script>
+</body>
+</html>
